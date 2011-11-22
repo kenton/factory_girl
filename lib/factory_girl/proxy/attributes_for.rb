@@ -3,21 +3,21 @@ module FactoryGirl
     class AttributesFor < Proxy #:nodoc:
       def initialize(klass, callbacks = [])
         super
-        @hash = {}
+        @instance = {}
       end
 
       def get(attribute)
-        @ignored_attributes[attribute] || @hash[attribute]
+        @ignored_attributes[attribute] || @instance[attribute]
       end
 
       def set(attribute, value)
         return if attribute.is_a? Attribute::Association
 
-        @hash[attribute.name] = value
+        @instance[attribute.name] = value
       end
 
       def result(to_create)
-        @hash
+        @instance
       end
     end
   end

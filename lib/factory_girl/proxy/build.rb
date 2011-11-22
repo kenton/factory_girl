@@ -19,9 +19,8 @@ module FactoryGirl
       end
 
       def association(factory_name, overrides = {})
-        method = get_method(overrides[:method])
         factory = FactoryGirl.factory_by_name(factory_name)
-        factory.run(method, overrides.except(:method))
+        factory.run(get_method(overrides[:method]), overrides.except(:method))
       end
 
       def result(to_create)
