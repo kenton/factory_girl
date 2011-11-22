@@ -6,33 +6,6 @@ require "factory_girl/proxy/stub"
 
 module FactoryGirl
   class Proxy #:nodoc:
-    class NullInstanceWrapper
-      attr_reader :object
-      def get(attribute); end
-      def set(attribute, value); end
-    end
-
-    class InstanceWrapper
-      attr_reader :object
-      def initialize(object)
-        @object = object
-      end
-
-      def get(attribute)
-        instance_has_attributes? ? @object.send(attribute) : @object[attribute]
-      end
-
-      def set(attribute, value)
-        instance_has_attributes? ? @object.send(:"#{attribute}=", value) : @object[attribute] = value
-      end
-
-      private
-
-      def instance_has_attributes?
-        !@object.is_a?(Hash)
-      end
-    end
-
     def initialize(klass, callbacks = [])
       @callbacks = callbacks.inject({}) do |result, callback|
         result[callback.name] ||= []
@@ -41,15 +14,10 @@ module FactoryGirl
       end
 
       @instance = NullInstanceWrapper.new
-      @ignored_attributes = {}
     end
 
     def get(attribute)
-      if @ignored_attributes.has_key?(attribute)
-        @ignored_attributes[attribute]
-      else
-        @instance.get(attribute)
-      end
+      @instance.get(attribute)
     end
 
     def set(attribute, value)
@@ -57,7 +25,7 @@ module FactoryGirl
     end
 
     def set_ignored(attribute, value)
-      @ignored_attributes[attribute.name] = value
+      @instance.set_ignored(attribute.name, value)
     end
 
     def run_callbacks(name)
@@ -115,6 +83,41 @@ module FactoryGirl
       unless Proxy.const_defined? strategy.to_s.camelize
         raise ArgumentError, "Unknown strategy: #{strategy}"
       end
+    end
+
+    class InstanceWrapper
+      attr_reader :object
+      def initialize(object = nil)
+        @object             = object
+        @ignored_attributes = {}
+      end
+
+      def set_ignored(attribute, value)
+        @ignored_attributes[attribute] = value
+      end
+
+      def get(attribute)
+        if @ignored_attributes.has_key?(attribute)
+          @ignored_attributes[attribute]
+        else
+          get_attr(attribute)
+        end
+      end
+    end
+
+    class NullInstanceWrapper < InstanceWrapper
+      def get_attr(attribute);   end
+      def set(attribute, value); end
+    end
+
+    class ClassInstanceWrapper < InstanceWrapper
+      def get_attr(attribute);   @object.send(attribute);               end
+      def set(attribute, value); @object.send(:"#{attribute}=", value); end
+    end
+
+    class HashInstanceWrapper < InstanceWrapper
+      def get_attr(attribute);   @object[attribute];         end
+      def set(attribute, value); @object[attribute] = value; end
     end
   end
 end

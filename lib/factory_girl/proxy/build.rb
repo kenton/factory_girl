@@ -3,7 +3,7 @@ module FactoryGirl
     class Build < Proxy #:nodoc:
       def initialize(klass, callbacks = [])
         super
-        @instance = InstanceWrapper.new(klass.new)
+        @instance = ClassInstanceWrapper.new(klass.new)
       end
 
       def association(factory_name, overrides = {})

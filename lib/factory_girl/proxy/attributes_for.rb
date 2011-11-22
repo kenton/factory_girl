@@ -3,7 +3,7 @@ module FactoryGirl
     class AttributesFor < Proxy #:nodoc:
       def initialize(klass, callbacks = [])
         super
-        @instance = InstanceWrapper.new({})
+        @instance = HashInstanceWrapper.new({})
       end
 
       def set(attribute, value)

@@ -5,7 +5,7 @@ module FactoryGirl
 
       def initialize(klass, callbacks = [])
         super
-        @instance = InstanceWrapper.new(klass.new)
+        @instance = ClassInstanceWrapper.new(klass.new)
         @instance.object.id = next_id
         @instance.object.instance_eval do
           def persisted?
