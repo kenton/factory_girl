@@ -5,10 +5,10 @@ module FactoryGirl
         super
 
         to_create ||= lambda {|instance| instance.save! }
-        to_create[@instance]
+        to_create[@instance.object]
 
         run_callbacks(:after_create)
-        @instance
+        @instance.object
       end
     end
   end

@@ -3,21 +3,16 @@ module FactoryGirl
     class AttributesFor < Proxy #:nodoc:
       def initialize(klass, callbacks = [])
         super
-        @instance = {}
-      end
-
-      def get(attribute)
-        @ignored_attributes[attribute] || @instance[attribute]
+        @instance = InstanceWrapper.new({})
       end
 
       def set(attribute, value)
         return if attribute.is_a? Attribute::Association
-
-        @instance[attribute.name] = value
+        super
       end
 
       def result(to_create)
-        @instance
+        @instance.object
       end
     end
   end

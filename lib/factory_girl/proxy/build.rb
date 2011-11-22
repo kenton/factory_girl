@@ -3,19 +3,7 @@ module FactoryGirl
     class Build < Proxy #:nodoc:
       def initialize(klass, callbacks = [])
         super
-        @instance = klass.new
-      end
-
-      def get(attribute)
-        if @ignored_attributes.has_key?(attribute)
-          @ignored_attributes[attribute]
-        else
-          @instance.send(attribute)
-        end
-      end
-
-      def set(attribute, value)
-        @instance.send(:"#{attribute.name}=", value)
+        @instance = InstanceWrapper.new(klass.new)
       end
 
       def association(factory_name, overrides = {})
@@ -25,7 +13,7 @@ module FactoryGirl
 
       def result(to_create)
         run_callbacks(:after_build)
-        @instance
+        @instance.object
       end
 
       private
