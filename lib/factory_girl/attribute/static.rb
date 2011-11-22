@@ -10,8 +10,9 @@ module FactoryGirl
         @value = value
       end
 
-      def add_to(proxy)
-        set_proxy_value(proxy, @value)
+      def to_proc(proxy)
+        value = @value
+        lambda { value }
       end
 
       def priority

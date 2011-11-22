@@ -13,7 +13,7 @@ module FactoryGirl
         result
       end
 
-      @instance = NullInstanceWrapper.new
+      @instance = InstanceWrapper.new(klass.new)
     end
 
     def get(attribute)
@@ -86,38 +86,32 @@ module FactoryGirl
     end
 
     class InstanceWrapper
-      attr_reader :object
       def initialize(object = nil)
-        @object             = object
-        @ignored_attributes = {}
+        @object = object
+        @attributes = []
+        @dynamic_class = Class.new
+        @class_instance = @dynamic_class.new
+      end
+
+      def object
+        @attributes.each do |attribute|
+          @object.send("#{attribute}=", get(attribute))
+        end
+        @object
+      end
+
+      def set(attribute, value)
+        @dynamic_class.send(:define_method, attribute, value)
+        @attributes << attribute
       end
 
       def set_ignored(attribute, value)
-        @ignored_attributes[attribute] = value
+        @dynamic_class.send(:define_method, attribute, value)
       end
 
       def get(attribute)
-        if @ignored_attributes.has_key?(attribute)
-          @ignored_attributes[attribute]
-        else
-          get_attr(attribute)
-        end
+        @class_instance.send(attribute)
       end
-    end
-
-    class NullInstanceWrapper < InstanceWrapper
-      def get_attr(attribute);   end
-      def set(attribute, value); end
-    end
-
-    class ClassInstanceWrapper < InstanceWrapper
-      def get_attr(attribute);   @object.send(attribute);               end
-      def set(attribute, value); @object.send(:"#{attribute}=", value); end
-    end
-
-    class HashInstanceWrapper < InstanceWrapper
-      def get_attr(attribute);   @object[attribute];         end
-      def set(attribute, value); @object[attribute] = value; end
     end
   end
 end

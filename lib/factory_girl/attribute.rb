@@ -17,6 +17,7 @@ module FactoryGirl
     end
 
     def add_to(proxy)
+      set_proxy_value(proxy, to_proc(proxy))
     end
 
     def association?
