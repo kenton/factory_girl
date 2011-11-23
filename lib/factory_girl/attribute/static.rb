@@ -15,10 +15,6 @@ module FactoryGirl
         lambda { value }
       end
 
-      def priority
-        0
-      end
-
       def ==(another)
         self.name == another.name &&
           self.value == another.value &&

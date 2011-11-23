@@ -16,17 +16,7 @@ module FactoryGirl
       @instance = InstanceWrapper.new(klass.new)
     end
 
-    def get(attribute)
-      @instance.get(attribute)
-    end
-
-    def set(attribute, value)
-      @instance.set(attribute.name, value)
-    end
-
-    def set_ignored(attribute, value)
-      @instance.set_ignored(attribute.name, value)
-    end
+    delegate :get, :set, :set_ignored, :to => :@instance
 
     def run_callbacks(name)
       if @callbacks[name]
@@ -91,26 +81,35 @@ module FactoryGirl
         @attributes = []
         @dynamic_class = Class.new
         @class_instance = @dynamic_class.new
+        @cached_results = {}
+      end
+
+      def to_hash
+        @attributes.inject({}) do |result, attribute|
+          result[attribute] = get(attribute)
+          result
+        end
       end
 
       def object
-        @attributes.each do |attribute|
+        (@attributes - @cached_results.keys).each do |attribute|
           @object.send("#{attribute}=", get(attribute))
         end
+
         @object
       end
 
       def set(attribute, value)
-        @dynamic_class.send(:define_method, attribute, value)
-        @attributes << attribute
+        @dynamic_class.send(:define_method, attribute.name, value)
+        @attributes << attribute.name
       end
 
       def set_ignored(attribute, value)
-        @dynamic_class.send(:define_method, attribute, value)
+        @dynamic_class.send(:define_method, attribute.name, value)
       end
 
       def get(attribute)
-        @class_instance.send(attribute)
+        @cached_results[attribute] ||= @class_instance.send(attribute)
       end
     end
   end

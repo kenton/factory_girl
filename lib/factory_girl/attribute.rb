@@ -24,17 +24,8 @@ module FactoryGirl
       false
     end
 
-    def priority
-      1
-    end
-
     def aliases_for?(attr)
       FactoryGirl.aliases_for(attr).include?(name)
-    end
-
-    def <=>(another)
-      return nil unless another.is_a? Attribute
-      self.priority <=> another.priority
     end
 
     def ==(another)
