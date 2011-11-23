@@ -1,8 +1,6 @@
 module FactoryGirl
   class Attribute #:nodoc:
     class Association < Attribute  #:nodoc:
-      attr_reader :factory
-
       def initialize(name, factory, overrides)
         super(name, false)
         @factory   = factory
@@ -10,7 +8,7 @@ module FactoryGirl
       end
 
       def to_proc(proxy)
-        factory = @factory
+        factory   = @factory
         overrides = @overrides
         lambda { proxy.association(factory, overrides) }
       end

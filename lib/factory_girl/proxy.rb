@@ -7,13 +7,8 @@ require "factory_girl/proxy/stub"
 module FactoryGirl
   class Proxy #:nodoc:
     def initialize(klass, callbacks = [])
-      @callbacks = callbacks.inject({}) do |result, callback|
-        result[callback.name] ||= []
-        result[callback.name] << callback
-        result
-      end
-
-      @instance = InstanceWrapper.new(klass.new)
+      @callbacks = process_callbacks(callbacks)
+      @instance  = InstanceWrapper.new(klass.new)
     end
 
     delegate :get, :set, :set_ignored, :to => :@instance
@@ -61,10 +56,6 @@ module FactoryGirl
     def association(name, overrides = {})
     end
 
-    def method_missing(method, *args, &block)
-      get(method)
-    end
-
     def result(to_create)
       raise NotImplementedError, "Strategies must return a result"
     end
@@ -75,13 +66,27 @@ module FactoryGirl
       end
     end
 
+    private
+
+    def method_missing(method, *args, &block)
+      get(method)
+    end
+
+    def process_callbacks(callbacks)
+      callbacks.inject({}) do |result, callback|
+        result[callback.name] ||= []
+        result[callback.name] << callback
+        result
+      end
+    end
+
     class InstanceWrapper
-      def initialize(object = nil)
-        @object = object
-        @attributes = []
-        @dynamic_class = Class.new
-        @class_instance = @dynamic_class.new
-        @cached_results = {}
+      def initialize(object)
+        @object                  = object
+        @attributes              = []
+        @cached_attribute_values = {}
+        @dynamic_class           = Class.new
+        @class_instance          = @dynamic_class.new
       end
 
       def to_hash
@@ -92,7 +97,7 @@ module FactoryGirl
       end
 
       def object
-        (@attributes - @cached_results.keys).each do |attribute|
+        (@attributes - @cached_attribute_values.keys).each do |attribute|
           @object.send("#{attribute}=", get(attribute))
         end
 
@@ -100,16 +105,22 @@ module FactoryGirl
       end
 
       def set(attribute, value)
-        @dynamic_class.send(:define_method, attribute.name, value)
+        define_lazy_attribute(attribute, value)
         @attributes << attribute.name
       end
 
       def set_ignored(attribute, value)
-        @dynamic_class.send(:define_method, attribute.name, value)
+        define_lazy_attribute(attribute, value)
       end
 
       def get(attribute)
-        @cached_results[attribute] ||= @class_instance.send(attribute)
+        @cached_attribute_values[attribute] ||= @class_instance.send(attribute)
+      end
+
+      private
+
+      def define_lazy_attribute(attribute, value)
+        @dynamic_class.send(:define_method, attribute.name, value)
       end
     end
   end

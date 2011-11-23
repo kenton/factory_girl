@@ -6,8 +6,6 @@ require "factory_girl/attribute/sequence"
 module FactoryGirl
 
   class Attribute #:nodoc:
-    include Comparable
-
     attr_reader :name, :ignored
 
     def initialize(name, ignored)
@@ -17,7 +15,11 @@ module FactoryGirl
     end
 
     def add_to(proxy)
-      set_proxy_value(proxy, to_proc(proxy))
+      if @ignored
+        proxy.set_ignored(self, to_proc(proxy))
+      else
+        proxy.set(self, to_proc(proxy))
+      end
     end
 
     def association?
@@ -28,10 +30,6 @@ module FactoryGirl
       FactoryGirl.aliases_for(attr).include?(name)
     end
 
-    def ==(another)
-      self.object_id == another.object_id
-    end
-
     private
 
     def ensure_non_attribute_writer!
@@ -40,14 +38,6 @@ module FactoryGirl
         raise AttributeDefinitionError,
           "factory_girl uses 'f.#{attribute_name} value' syntax " +
           "rather than 'f.#{attribute_name} = value'"
-      end
-    end
-
-    def set_proxy_value(proxy, value)
-      if @ignored
-        proxy.set_ignored(self, value)
-      else
-        proxy.set(self, value)
       end
     end
   end
