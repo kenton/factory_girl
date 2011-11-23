@@ -22,6 +22,10 @@ module FactoryGirl
       end
     end
 
+    def to_proc(proxy)
+      lambda { }
+    end
+
     def association?
       false
     end
