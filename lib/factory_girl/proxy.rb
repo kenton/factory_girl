@@ -82,11 +82,9 @@ module FactoryGirl
 
     class InstanceWrapper
       def initialize(object)
-        @object                  = object
-        @attributes              = []
+        @object     = object
+        @attributes = []
         @cached_attribute_values = {}
-        @dynamic_class           = Class.new
-        @class_instance          = @dynamic_class.new
       end
 
       def to_hash
@@ -97,30 +95,41 @@ module FactoryGirl
       end
 
       def object
-        (@attributes - @cached_attribute_values.keys).each do |attribute|
-          @object.send("#{attribute}=", get(attribute))
-        end
-
+        assign_object_attributes
         @object
       end
 
       def set(attribute, value)
-        define_lazy_attribute(attribute, value)
+        define_attribute(attribute, value)
         @attributes << attribute.name
       end
 
       def set_ignored(attribute, value)
-        define_lazy_attribute(attribute, value)
+        define_attribute(attribute, value)
       end
 
       def get(attribute)
-        @cached_attribute_values[attribute] ||= @class_instance.send(attribute)
+        @cached_attribute_values[attribute] ||= anonymous_instance.send(attribute)
       end
 
       private
 
-      def define_lazy_attribute(attribute, value)
-        @dynamic_class.send(:define_method, attribute.name, value)
+      def define_attribute(attribute, value)
+        anonymous_class.send(:define_method, attribute.name, value)
+      end
+
+      def assign_object_attributes
+        (@attributes - @cached_attribute_values.keys).each do |attribute|
+          @object.send("#{attribute}=", get(attribute))
+        end
+      end
+
+      def anonymous_class
+        @anonymous_class ||= Class.new
+      end
+
+      def anonymous_instance
+        @anonymous_instance ||= anonymous_class.new
       end
     end
   end
