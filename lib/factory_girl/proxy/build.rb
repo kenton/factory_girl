@@ -8,7 +8,7 @@ module FactoryGirl
 
       def result(to_create)
         run_callbacks(:after_build)
-        @instance.object
+        result_instance
       end
 
       private

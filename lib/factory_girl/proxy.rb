@@ -8,15 +8,15 @@ module FactoryGirl
   class Proxy #:nodoc:
     def initialize(klass, callbacks = [])
       @callbacks = process_callbacks(callbacks)
-      @instance  = InstanceWrapper.new(klass.new)
+      @proxy  = ObjectWrapper.new(klass.new)
     end
 
-    delegate :get, :set, :set_ignored, :to => :@instance
+    delegate :get, :set, :set_ignored, :to => :@proxy
 
     def run_callbacks(name)
       if @callbacks[name]
         @callbacks[name].each do |callback|
-          callback.run(@instance.object, self)
+          callback.run(result_instance, self)
         end
       end
     end
@@ -80,7 +80,15 @@ module FactoryGirl
       end
     end
 
-    class InstanceWrapper
+    def result_instance
+      @proxy.object
+    end
+
+    def result_hash
+      @proxy.to_hash
+    end
+
+    class ObjectWrapper
       def initialize(object)
         @object     = object
         @attributes = []

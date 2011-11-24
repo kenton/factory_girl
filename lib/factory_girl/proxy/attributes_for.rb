@@ -7,7 +7,7 @@ module FactoryGirl
       end
 
       def result(to_create)
-        @instance.to_hash
+        result_hash
       end
     end
   end
